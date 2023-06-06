@@ -44,16 +44,63 @@ exports.findAll = (req, res) => {
       });
   
 };
+
 exports.findOne = (req, res) => {
   
 };
 
-exports.update = (req, res) => {
-  
-};
+exports.update = async (req, res) => {
+
+      console.log('id to be updated is :--'+ req.params.id);
+      console.log(JSON.stringify(req.body));
+      exports.update = (req, res) => {
+        const id = req.params.id;
+      
+        db.Expenses.update(req.body, {
+          where: { id: id }
+        })
+          .then(num => {
+            if (num == 1) {
+              res.send({
+                message: "Expense was updated successfully."
+              });
+            } else {
+              res.send({
+                message: `Cannot update Expense with id=${id}. Maybe Expense was not found or req.body is empty!`
+              });
+            }
+          })
+          .catch(err => {
+            console.log('error is :---'+ err);
+            res.status(500).send({
+              message: "Error updating Expense with id=" + id
+            });
+          });
+      }; 
+}
 
 exports.delete = (req, res) => {
-  
+  const id = req.params.id;
+
+  db.Expenses.destroy({
+    where: { id: id }
+  })
+    .then(num => {
+      if (num == 1) {
+        res.send({
+          message: "Expense was deleted successfully!"
+        });
+      } else {
+        res.send({
+          message: `Cannot delete Expense with id=${id}. Maybe Expense was not found!`
+        });
+      }
+    })
+    .catch(err => {
+      res.status(500).send({
+        message: "Could not delete Expense with id=" + id
+      });
+    });
 };
 
 exports.deleteAll = (req, res) => {
