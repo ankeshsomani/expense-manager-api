@@ -1,5 +1,5 @@
 const db = require("../models");
-const { Expenses } = require("../models");
+const { Expenses, Sequelize } = require("../models");
 const Op = db.sequelize.Op;
 
 exports.create = (req, res) => {
@@ -29,11 +29,33 @@ exports.create = (req, res) => {
 
 exports.findAll = (req, res) => {
   const description = req.query.description;
-  var condition = description
-    ? { description: { [Op.like]: `%${description}%` } }
-    : null;
+  const fromDate = req.query.fromDate;
+  const toDate = req.query.toDate;
+  const category = req.query.category;
+  var search = {};
+  if (description) {
+    search = {
+      [Sequelize.Op.or]: [
+        { description: { [Sequelize.Op.like]: `%${description}%` } },
+      ],
+    };
+  }
+  if (fromDate && toDate) {
+    search.expensedate = { [Sequelize.Op.between]: [fromDate, toDate] };
+  }
+  else if (fromDate) {
+    search.expensedate = { [Sequelize.Op.gt]: `${fromDate}` };
+  }
+  else if (toDate){
+    search.expensedate = { [Sequelize.Op.lt]: `${toDate}` };
+  }
 
-  db.Expenses.findAll({ where: condition })
+  if (category) {
+    search.category = { [Sequelize.Op.eq]: `${category}` };
+  }
+  console.log("query formed  is :--" + search);
+
+  db.Expenses.findAll({ where: { [Sequelize.Op.and]: [search] } })
     .then((data) => {
       res.send(data);
     })
